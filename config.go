@@ -230,13 +230,13 @@ var header = `# Telegraf configuration
   # ie, if interval="10s" then always collect on :00, :10, :20, etc.
   round_interval = true
 
-  # Default data flushing interval for all outputs
+  # Default data flushing interval for all outputs. You should not set this below
+  # interval. Maximum flush_interval will be flush_interval + flush_jitter
   flush_interval = "10s"
-  # Jitter the flush interval by a random range
-  # ie, a jitter of 5s and interval 10s means flush will happen every 10-15s
-  flush_jitter = "5s"
-  # Number of times to retry each data flush
-  flush_retries = 2
+  # Jitter the flush interval by a random amount. This is primarily to avoid
+  # large write spikes for users running a large number of telegraf instances.
+  # ie, a jitter of 5s and interval 10s means flushes will happen every 10-15s
+  flush_jitter = "0s"
 
   # Run telegraf in debug mode
   debug = false
@@ -369,12 +369,29 @@ func PrintOutputConfig(name string) error {
 	return nil
 }
 
-// Used for fuzzy matching struct field names in FieldByNameFunc calls below
-func fieldMatch(field string) func(string) bool {
-	return func(name string) bool {
-		r := strings.NewReplacer("_", "")
-		return strings.ToLower(name) == strings.ToLower(r.Replace(field))
+// Find the field with a name matching fieldName, respecting the struct tag and ignoring case and underscores.
+// If no field is found, return the zero reflect.Value, which should be checked for with .IsValid().
+func findField(fieldName string, value reflect.Value) reflect.Value {
+	r := strings.NewReplacer("_", "")
+	vType := value.Type()
+	for i := 0; i < vType.NumField(); i++ {
+		fieldType := vType.Field(i)
+
+		// if we have toml tag, use it
+		if tag := fieldType.Tag.Get("toml"); tag != "" {
+			if tag == "-" { // omit
+				continue
+			}
+			if tag == fieldName {
+				return value.Field(i)
+			}
+		} else {
+			if strings.ToLower(fieldType.Name) == strings.ToLower(r.Replace(fieldName)) {
+				return value.Field(i)
+			}
+		}
 	}
+	return reflect.Value{}
 }
 
 // A very limited merge. Merges the fields named in the fields parameter, replacing most values, but appending to arrays.
@@ -388,15 +405,15 @@ func mergeStruct(base, overlay interface{}, fields []string) error {
 		return fmt.Errorf("Tried to merge two different types: %v and %v", baseValue.Type(), overlayValue.Type())
 	}
 	for _, field := range fields {
-		overlayFieldValue := overlayValue.FieldByNameFunc(fieldMatch(field))
+		overlayFieldValue := findField(field, overlayValue)
 		if !overlayFieldValue.IsValid() {
 			return fmt.Errorf("could not find field in %v matching %v", overlayValue.Type(), field)
 		}
+		baseFieldValue := findField(field, baseValue)
 		if overlayFieldValue.Kind() == reflect.Slice {
-			baseFieldValue := baseValue.FieldByNameFunc(fieldMatch(field))
 			baseFieldValue.Set(reflect.AppendSlice(baseFieldValue, overlayFieldValue))
 		} else {
-			baseValue.FieldByNameFunc(fieldMatch(field)).Set(overlayFieldValue)
+			baseFieldValue.Set(overlayFieldValue)
 		}
 	}
 	return nil

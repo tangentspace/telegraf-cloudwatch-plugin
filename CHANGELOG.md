@@ -1,4 +1,16 @@
-## v0.1.10 [unreleased]
+## v0.2.1 [unreleased]
+
+### Release Notes
+- Telegraf will no longer use docker-compose for "long" unit test, it has been
+changed to just run docker commands in the Makefile. See `make docker-run` and
+`make docker-kill`. `make test` will still run all unit tests with docker.
+
+### Features
+- [#325](https://github.com/influxdb/telegraf/pull/325): NSQ output. Thanks @jrxFive!
+
+### Bugfixes
+
+## v0.2.0 [2015-10-27]
 
 ### Release Notes
 - The -test flag will now only output 2 collections for plugins that need it
@@ -14,8 +26,7 @@ even interval. This means that `interval="10s"` will collect every :00, :10, etc
 To ease scale concerns, flushing will be "jittered" by a random amount so that
 all Telegraf instances do not flush at the same time. Both of these options can
 be controlled via the `round_interval` and `flush_jitter` config options.
-- Telegraf will now retry metric flushes, twice by default. This can be configued
-via the `flush_retries` agent config option.
+- Telegraf will now retry metric flushes twice
 
 ### Features
 - [#205](https://github.com/influxdb/telegraf/issues/205): Include per-db redis keyspace info
@@ -39,6 +50,7 @@ of metrics collected and from how many plugins.
 - [#301](https://github.com/influxdb/telegraf/issues/301): Collect on even intervals
 - [#298](https://github.com/influxdb/telegraf/pull/298): Support retrying output writes
 - [#300](https://github.com/influxdb/telegraf/issues/300): aerospike plugin. Thanks @oldmantaiter!
+- [#322](https://github.com/influxdb/telegraf/issues/322): Librato output. Thanks @jipperinbham!
 
 ### Bugfixes
 - [#228](https://github.com/influxdb/telegraf/pull/228): New version of package will replace old one. Thanks @ekini!

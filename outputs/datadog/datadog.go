@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"sort"
+	"strings"
 
 	"github.com/influxdb/influxdb/client/v2"
 	"github.com/influxdb/telegraf/duration"
@@ -36,6 +38,7 @@ type TimeSeries struct {
 type Metric struct {
 	Metric string   `json:"metric"`
 	Points [1]Point `json:"points"`
+	Host   string   `json:"host"`
 	Tags   []string `json:"tags,omitempty"`
 }
 
@@ -63,19 +66,25 @@ func (d *Datadog) Write(points []*client.Point) error {
 	if len(points) == 0 {
 		return nil
 	}
-	ts := TimeSeries{
-		Series: make([]*Metric, len(points)),
-	}
-	for index, pt := range points {
+	ts := TimeSeries{}
+	var tempSeries = make([]*Metric, len(points))
+	var acceptablePoints = 0
+	for _, pt := range points {
 		metric := &Metric{
-			Metric: pt.Name(),
+			Metric: strings.Replace(pt.Name(), "_", ".", -1),
 			Tags:   buildTags(pt.Tags()),
+			Host:   pt.Tags()["host"],
 		}
 		if p, err := buildPoint(pt); err == nil {
 			metric.Points[0] = p
+			tempSeries[acceptablePoints] = metric
+			acceptablePoints += 1
+		} else {
+			log.Printf("unable to build Metric for %s, skipping\n", pt.Name())
 		}
-		ts.Series[index] = metric
 	}
+	ts.Series = make([]*Metric, acceptablePoints)
+	copy(ts.Series, tempSeries[0:])
 	tsBytes, err := json.Marshal(ts)
 	if err != nil {
 		return fmt.Errorf("unable to marshal TimeSeries, %s\n", err.Error())
@@ -87,10 +96,10 @@ func (d *Datadog) Write(points []*client.Point) error {
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := d.client.Do(req)
-	defer resp.Body.Close()
 	if err != nil {
 		return fmt.Errorf("error POSTing metrics, %s\n", err.Error())
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode > 209 {
 		return fmt.Errorf("received bad status code, %d\n", resp.StatusCode)
