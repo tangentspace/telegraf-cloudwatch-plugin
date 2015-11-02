@@ -4,36 +4,36 @@ import (
 	"fmt"
 	"time"
 
-    "github.com/aws/aws-sdk-go/aws"
-    "github.com/aws/aws-sdk-go/aws/session"
-    "github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/influxdb/telegraf/plugins"
 )
 
 var Debug bool
 
 type Metric struct {
-	Region string
+	Region     string
 	MetricName string
-	Namespace string
+	Namespace  string
 	Statistics []string
-	Period int64
-	Duration int64
-	Unit string
+	Period     int64
+	Duration   int64
+	Unit       string
 	Dimensions map[string]string
 }
 
 type CloudWatch struct {
-	Debug bool
+	Debug   bool
 	Metrics []Metric
 }
 
 func (cw *CloudWatch) Description() string {
-    return "Pull metrics from AWS CloudWatch."
+	return "Pull metrics from AWS CloudWatch."
 }
 
 func (cw *CloudWatch) SampleConfig() string {
-    return "ok = true # indicate if everything is fine"
+	return "ok = true # indicate if everything is fine"
 }
 
 func (cw *CloudWatch) Gather(acc plugins.Accumulator) error {
@@ -44,7 +44,7 @@ func (cw *CloudWatch) Gather(acc plugins.Accumulator) error {
 		m.PushMetrics(acc)
 	}
 
-    return nil
+	return nil
 }
 
 func printDebug(m ...interface{}) {
@@ -57,15 +57,14 @@ func convertDimensions(dims map[string]string) []*cloudwatch.Dimension {
 	awsDims := make([]*cloudwatch.Dimension, len(dims))
 	var i int
 	for key, value := range dims {
-		awsDims[i] = &cloudwatch.Dimension {
-			Name: aws.String(key),
+		awsDims[i] = &cloudwatch.Dimension{
+			Name:  aws.String(key),
 			Value: aws.String(value),
 		}
 		i++
 	}
 	return awsDims
 }
-
 
 func (m *Metric) PushMetrics(acc plugins.Accumulator) error {
 
@@ -77,10 +76,10 @@ func (m *Metric) PushMetrics(acc plugins.Accumulator) error {
 		MetricName: aws.String(m.MetricName),
 		Namespace:  aws.String(m.Namespace),
 		Period:     aws.Int64(m.Period),
-		StartTime:  aws.Time(time.Now().Add(-time.Duration(m.Duration)*time.Second)),
+		StartTime:  aws.Time(time.Now().Add(-time.Duration(m.Duration) * time.Second)),
 		Statistics: aws.StringSlice(m.Statistics),
 		Dimensions: convertDimensions(m.Dimensions),
-		Unit: aws.String(m.Unit),
+		Unit:       aws.String(m.Unit),
 	}
 
 	printDebug(params)
@@ -102,5 +101,5 @@ func (m *Metric) PushMetrics(acc plugins.Accumulator) error {
 }
 
 func init() {
-    plugins.Add("cloudwatch", func() plugins.Plugin { return &CloudWatch{} })
+	plugins.Add("cloudwatch", func() plugins.Plugin { return &CloudWatch{} })
 }
