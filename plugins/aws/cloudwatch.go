@@ -5,6 +5,7 @@ import (
 	"time"
 
     "github.com/aws/aws-sdk-go/aws"
+    "github.com/aws/aws-sdk-go/aws/session"
     "github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/influxdb/telegraf/plugins"
 )
@@ -68,7 +69,8 @@ func convertDimensions(dims map[string]string) []*cloudwatch.Dimension {
 
 func (m *Metric) PushMetrics(acc plugins.Accumulator) error {
 
-	svc := cloudwatch.New(&aws.Config{Region: aws.String(m.Region)})
+	sess := session.New(&aws.Config{Region: aws.String(m.Region)})
+	svc := cloudwatch.New(sess)
 
 	params := &cloudwatch.GetMetricStatisticsInput{
 		EndTime:    aws.Time(time.Now()),
