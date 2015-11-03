@@ -30,6 +30,41 @@
 			"Rev": "b2d95e5291cdbc26997d1301a5e467ecbb240e25"
 		},
 		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws",
+			"Comment": "v0.10.1-2-g2a76bd5",
+			"Rev": "2a76bd5c7daceae9b072d5070d555bde8c6f17d7"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/endpoints",
+			"Comment": "v0.10.1-2-g2a76bd5",
+			"Rev": "2a76bd5c7daceae9b072d5070d555bde8c6f17d7"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/query",
+			"Comment": "v0.10.1-2-g2a76bd5",
+			"Rev": "2a76bd5c7daceae9b072d5070d555bde8c6f17d7"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/rest",
+			"Comment": "v0.10.1-2-g2a76bd5",
+			"Rev": "2a76bd5c7daceae9b072d5070d555bde8c6f17d7"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil",
+			"Comment": "v0.10.1-2-g2a76bd5",
+			"Rev": "2a76bd5c7daceae9b072d5070d555bde8c6f17d7"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/signer/v4",
+			"Comment": "v0.10.1-2-g2a76bd5",
+			"Rev": "2a76bd5c7daceae9b072d5070d555bde8c6f17d7"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/service/cloudwatch",
+			"Comment": "v0.10.1-2-g2a76bd5",
+			"Rev": "2a76bd5c7daceae9b072d5070d555bde8c6f17d7"
+		},
+		{
 			"ImportPath": "github.com/beorn7/perks/quantile",
 			"Rev": "b965b613227fddccbfffe13eae360ed3fa822f8d"
 		},
@@ -233,6 +268,10 @@
 			"ImportPath": "github.com/stretchr/testify/suite",
 			"Comment": "v1.0-21-gf552045",
 			"Rev": "f5520455607c0233cb6d7b056f71b22c1d265ef1"
+		},
+		{
+			"ImportPath": "github.com/vaughan0/go-ini",
+			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
 		},
 		{
 			"ImportPath": "github.com/wvanbergen/kafka/consumergroup",
