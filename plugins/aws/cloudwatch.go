@@ -66,6 +66,14 @@ func convertDimensions(dims map[string]string) []*cloudwatch.Dimension {
 	return awsDims
 }
 
+func copyDims(dims map[string]string) map[string]string {
+	dimsCopy := make(map[string]string)
+	for k, v := range dims {
+		dimsCopy[k] = v
+	}
+	return dimsCopy
+}
+
 func (m *Metric) PushMetrics(acc plugins.Accumulator) error {
 
 	sess := session.New(&aws.Config{Region: aws.String(m.Region)})
@@ -91,12 +99,12 @@ func (m *Metric) PushMetrics(acc plugins.Accumulator) error {
 		return err
 	}
 
-	for _, d := range resp.Datapoints {
-		acc.Add(*resp.Label, *d.Average, m.Dimensions, *d.Timestamp)
-	}
 
 	printDebug(resp)
 
+	for _, d := range resp.Datapoints {
+		acc.Add(*resp.Label, *d.Average, copyDims(m.Dimensions), *d.Timestamp)
+	}
 	return nil
 }
 
