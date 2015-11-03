@@ -13,14 +13,14 @@ import (
 var Debug bool
 
 type Metric struct {
-	Region     string
-	MetricName string
-	Namespace  string
-	Statistics []string
-	Period     int64
-	Duration   int64
-	Unit       string
-	Dimensions map[string]string
+	Region      string
+	MetricNames []string
+	Namespace   string
+	Statistics  []string
+	Period      int64
+	Duration    int64
+	Unit        string
+	Dimensions  map[string]string
 }
 
 type CloudWatch struct {
@@ -81,7 +81,6 @@ func (m *Metric) PushMetrics(acc plugins.Accumulator) error {
 
 	params := &cloudwatch.GetMetricStatisticsInput{
 		EndTime:    aws.Time(time.Now()),
-		MetricName: aws.String(m.MetricName),
 		Namespace:  aws.String(m.Namespace),
 		Period:     aws.Int64(m.Period),
 		StartTime:  aws.Time(time.Now().Add(-time.Duration(m.Duration) * time.Second)),
@@ -92,19 +91,26 @@ func (m *Metric) PushMetrics(acc plugins.Accumulator) error {
 
 	printDebug(params)
 
-	resp, err := svc.GetMetricStatistics(params)
+	for _, metricName := range m.MetricNames {
 
-	if err != nil {
-		fmt.Println(err.Error())
-		return err
+		params.MetricName = aws.String(metricName)
+		printDebug("requesting metric: ", metricName)
+
+		resp, err := svc.GetMetricStatistics(params)
+
+		if err != nil {
+			fmt.Println(err.Error())
+			return err
+		}
+
+		printDebug(resp)
+
+		for _, d := range resp.Datapoints {
+			acc.Add(*resp.Label, *d.Average, copyDims(m.Dimensions), *d.Timestamp)
+		}
+
 	}
 
-
-	printDebug(resp)
-
-	for _, d := range resp.Datapoints {
-		acc.Add(*resp.Label, *d.Average, copyDims(m.Dimensions), *d.Timestamp)
-	}
 	return nil
 }
 
