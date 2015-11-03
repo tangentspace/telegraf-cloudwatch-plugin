@@ -102,6 +102,15 @@ func NewAgent(config *Config) (*Agent, error) {
 // Connect connects to all configured outputs
 func (a *Agent) Connect() error {
 	for _, o := range a.outputs {
+		switch ot := o.output.(type) {
+		case outputs.ServiceOutput:
+			if err := ot.Start(); err != nil {
+				log.Printf("Service for output %s failed to start, exiting\n%s\n",
+					o.name, err.Error())
+				return err
+			}
+		}
+
 		if a.Debug {
 			log.Printf("Attempting connection to output: %s\n", o.name)
 		}
@@ -126,6 +135,10 @@ func (a *Agent) Close() error {
 	var err error
 	for _, o := range a.outputs {
 		err = o.output.Close()
+		switch ot := o.output.(type) {
+		case outputs.ServiceOutput:
+			ot.Stop()
+		}
 	}
 	return err
 }
@@ -301,7 +314,7 @@ func (a *Agent) Test() error {
 		// Special instructions for some plugins. cpu, for example, needs to be
 		// run twice in order to return cpu usage percentages.
 		switch plugin.name {
-		case "cpu":
+		case "cpu", "mongodb":
 			time.Sleep(500 * time.Millisecond)
 			fmt.Printf("* Plugin: %s, Collection 2\n", plugin.name)
 			if err := plugin.plugin.Gather(acc); err != nil {
