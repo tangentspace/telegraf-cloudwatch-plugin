@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,6 +19,7 @@ type Metric struct {
 	Namespace   string
 	Statistics  []string
 	Period      int64
+	Prefix		string
 	Duration    int64
 	Unit        string
 	Dimensions  map[string]string
@@ -86,7 +88,7 @@ func (m *Metric) PushMetrics(acc plugins.Accumulator) error {
 		StartTime:  aws.Time(time.Now().Add(-time.Duration(m.Duration) * time.Second)),
 		Statistics: aws.StringSlice(m.Statistics),
 		Dimensions: convertDimensions(m.Dimensions),
-		Unit:       aws.String(m.Unit),
+		// Unit:       aws.String(m.Unit),
 	}
 
 	printDebug(params)
@@ -106,7 +108,18 @@ func (m *Metric) PushMetrics(acc plugins.Accumulator) error {
 		printDebug(resp)
 
 		for _, d := range resp.Datapoints {
-			acc.Add(*resp.Label, *d.Average, copyDims(m.Dimensions), *d.Timestamp)
+			if d.Average != nil {
+				label := strings.Join([]string{m.Prefix, *resp.Label, "average"}, "_")
+				acc.Add(label, *d.Average, copyDims(m.Dimensions), *d.Timestamp)
+			}
+			if d.Maximum != nil {
+				label := strings.Join([]string{m.Prefix, *resp.Label, "maximum"}, "_")
+				acc.Add(label, *d.Maximum, copyDims(m.Dimensions), *d.Timestamp)
+			}
+			if d.Minimum != nil {
+				label := strings.Join([]string{m.Prefix, *resp.Label, "minimum"}, "_")
+				acc.Add(label, *d.Minimum, copyDims(m.Dimensions), *d.Timestamp)
+			}
 		}
 
 	}
