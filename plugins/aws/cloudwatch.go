@@ -112,6 +112,10 @@ func (m *Metric) PushMetrics(acc plugins.Accumulator) error {
 				label := strings.Join([]string{m.Prefix, *resp.Label, "average"}, "_")
 				acc.Add(label, *d.Average, copyDims(m.Dimensions), *d.Timestamp)
 			}
+			if d.Count != nil {
+				label := strings.Join([]string{m.Prefix, *resp.Label, "count"}, "_")
+				acc.Add(label, *d.Count, copyDims(m.Dimensions), *d.Timestamp)
+			}			
 			if d.Maximum != nil {
 				label := strings.Join([]string{m.Prefix, *resp.Label, "maximum"}, "_")
 				acc.Add(label, *d.Maximum, copyDims(m.Dimensions), *d.Timestamp)
@@ -119,6 +123,10 @@ func (m *Metric) PushMetrics(acc plugins.Accumulator) error {
 			if d.Minimum != nil {
 				label := strings.Join([]string{m.Prefix, *resp.Label, "minimum"}, "_")
 				acc.Add(label, *d.Minimum, copyDims(m.Dimensions), *d.Timestamp)
+			}
+			if d.Sum != nil {
+				label := strings.Join([]string{m.Prefix, *resp.Label, "sum"}, "_")
+				acc.Add(label, *d.Sum, copyDims(m.Dimensions), *d.Timestamp)
 			}
 		}
 
